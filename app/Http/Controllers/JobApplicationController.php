@@ -21,9 +21,12 @@ class JobApplicationController extends Controller
 
         $posting->applications()->create($data);
 
-        // route() builds an absolute URL from the request's host. Without
-        // UseServedForHost, that's your own hostname, not the customer's.
+        // route() builds an absolute URL from the request's host.
+        // Without UseServedForHost, that's your own hostname.
+        $thanks = "Thanks, {$data['name']}. "
+            ."{$board->name} has your application.";
+
         return to_route('jobs.show', $posting->id)
-            ->with('status', "Thanks, {$data['name']}. {$board->name} has your application.");
+            ->with('status', $thanks);
     }
 }

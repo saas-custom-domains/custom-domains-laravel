@@ -93,7 +93,8 @@ The candidate leaves the customer's domain. A form posted that way fails with **
 
 ```php
 if ($request->hasHeader('X-Served-For')) {
-    $request->headers->set('Host', static::verifiedHost($request));
+    $host = static::verifiedHost($request);
+    $request->headers->set('Host', $host);
     $request->headers->remove('X-Forwarded-Host');
     $request->headers->remove('X-Forwarded-Port');
 }

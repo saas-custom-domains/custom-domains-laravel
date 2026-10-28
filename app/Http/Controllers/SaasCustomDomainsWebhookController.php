@@ -11,7 +11,9 @@ class SaasCustomDomainsWebhookController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $expected = (string) config('services.saascustomdomains.webhook_token');
+        $expected = (string) config(
+            'services.saascustomdomains.webhook_token'
+        );
         $token = (string) $request->query('token');
 
         if ($expected === '' || ! hash_equals($expected, $token)) {
@@ -19,19 +21,27 @@ class SaasCustomDomainsWebhookController extends Controller
         }
 
         $uuid = $request->input('domain.uuid');
-        $domain = $uuid ? CustomDomain::firstWhere('provider_uuid', $uuid) : null;
+        $domain = $uuid
+            ? CustomDomain::firstWhere('provider_uuid', $uuid)
+            : null;
 
-        // Not ours (or already removed): acknowledge so it isn't retried.
+        // Not ours (or already removed): acknowledge so it isn't
+        // retried.
         if ($domain === null) {
             return response()->noContent();
         }
 
-        match ($request->input('event')) {
-            'domain_dns_proxy_record_valid' => $domain->update(['status' => CustomDomain::ACTIVE]),
-            'domain_dns_proxy_record_invalid' => $domain->update(['status' => CustomDomain::PENDING]),
-            'tls_certificate_issued' => $domain->update(['https_ready' => true]),
-            default => null,
+        $changes = match ($request->input('event')) {
+            'domain_dns_proxy_record_valid' => [
+                'status' => CustomDomain::ACTIVE,
+            ],
+            'domain_dns_proxy_record_invalid' => [
+                'status' => CustomDomain::PENDING,
+            ],
+            'tls_certificate_issued' => ['https_ready' => true],
+            default => [],
         };
+        $domain->update($changes);
 
         return response()->noContent();
     }

@@ -17,10 +17,10 @@ class DnsCheck
         $ips = config('domains.server_ips');
 
         foreach ($this->records($host) as $record) {
-            if (isset($record['target']) && rtrim(strtolower($record['target']), '.') === $target) {
-                return true;
-            }
-            if (isset($record['ip']) && in_array($record['ip'], $ips, true)) {
+            $cname = rtrim(strtolower($record['target'] ?? ''), '.');
+            $ip = $record['ip'] ?? null;
+
+            if ($cname === $target || in_array($ip, $ips, true)) {
                 return true;
             }
         }

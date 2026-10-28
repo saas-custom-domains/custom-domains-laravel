@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\Http;
 class SaasCustomDomains
 {
     /** @return array{uuid: string, host: string, status: string} */
-    public function createDomain(string $host, ?string $instructionsRecipient = null): array
-    {
+    public function createDomain(
+        string $host,
+        ?string $instructionsRecipient = null,
+    ): array {
         return $this->client()->post($this->url(), array_filter([
             'host' => $host,
             // We email this address the exact DNS records to add.
@@ -22,8 +24,11 @@ class SaasCustomDomains
     /** @return array{dns_status: 'valid'|'pending'|'invalid'} */
     public function verifyDns(string $uuid): array
     {
-        // send() without data: post() would send an empty JSON array, "[]".
-        return $this->client()->send('POST', $this->url("{$uuid}/verify_dns_records"))->throw()->json();
+        // send() without data: post() would send an empty JSON
+        // array, "[]", as the body.
+        $url = $this->url("{$uuid}/verify_dns_records");
+
+        return $this->client()->send('POST', $url)->throw()->json();
     }
 
     public function deleteDomain(string $uuid): void
@@ -38,9 +43,9 @@ class SaasCustomDomains
 
     protected function client(): PendingRequest
     {
-        return Http::withToken(config('services.saascustomdomains.token'))
-            ->acceptJson()
-            ->timeout(10);
+        $token = config('services.saascustomdomains.token');
+
+        return Http::withToken($token)->acceptJson()->timeout(10);
     }
 
     protected function url(string $path = ''): string

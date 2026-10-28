@@ -18,10 +18,11 @@ class Hosts
             return false;
         }
 
+        $label = '/^(?!-)[a-z0-9-]{1,63}(?<!-)$/';
         $labels = explode('.', $host);
 
         return count($labels) >= 2 && collect($labels)->every(
-            fn ($label) => preg_match('/^(?!-)[a-z0-9-]{1,63}(?<!-)$/', $label) === 1
+            fn ($part) => preg_match($label, $part) === 1
         );
     }
 
@@ -31,12 +32,14 @@ class Hosts
         return in_array($host, config('domains.app_hosts'), true);
     }
 
-    // Domains customers can't connect: ours, and anything under APP_DOMAIN.
+    // Hosts customers can't connect: ours, and anything under
+    // APP_DOMAIN.
     public static function isReserved(string $host): bool
     {
-        $appDomain = static::normalize(config('domains.app_domain'));
+        $ours = static::normalize(config('domains.app_domain'));
 
-        return static::isAppHost($host)
-            || ($appDomain !== '' && ($host === $appDomain || str_ends_with($host, '.'.$appDomain)));
+        return static::isAppHost($host) || ($ours !== '' && (
+            $host === $ours || str_ends_with($host, '.'.$ours)
+        ));
     }
 }

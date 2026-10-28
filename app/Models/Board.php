@@ -24,9 +24,11 @@ class Board extends Model
     // Pending and unknown domains get null, so they 404.
     public static function forActiveHost(string $host): ?self
     {
-        return static::whereRelation('customDomains', fn ($query) => $query
-            ->where('host', $host)
-            ->where('status', CustomDomain::ACTIVE)
+        return static::whereRelation(
+            'customDomains',
+            fn ($query) => $query
+                ->where('host', $host)
+                ->where('status', CustomDomain::ACTIVE),
         )->first();
     }
 

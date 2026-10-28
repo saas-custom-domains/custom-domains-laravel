@@ -11,9 +11,14 @@ class CustomDomain extends Model
 
     public const ACTIVE = 'active';
 
-    protected $fillable = ['host', 'status', 'https_ready', 'provider_uuid'];
+    protected $fillable = [
+        'host', 'status', 'https_ready', 'provider_uuid',
+    ];
 
-    protected $attributes = ['status' => self::PENDING, 'https_ready' => false];
+    protected $attributes = [
+        'status' => self::PENDING,
+        'https_ready' => false,
+    ];
 
     protected function casts(): array
     {
@@ -27,7 +32,9 @@ class CustomDomain extends Model
 
     public static function isActiveHost(string $host): bool
     {
-        return static::where('host', $host)->where('status', self::ACTIVE)->exists();
+        return static::where('host', $host)
+            ->where('status', self::ACTIVE)
+            ->exists();
     }
 
     public function statusLabel(): string

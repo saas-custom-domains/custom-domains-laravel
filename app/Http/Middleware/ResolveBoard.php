@@ -17,9 +17,11 @@ class ResolveBoard
         $host = Hosts::normalize($request->getHost());
 
         if (Hosts::isAppHost($host)) {
-            // Boards are only reachable on their own domain. Our own
-            // homepage is the dashboard.
-            return $request->is('/') ? redirect()->route('dashboard') : abort(404);
+            // Boards are only reachable on their own domain. Our
+            // own homepage is the dashboard.
+            abort_unless($request->is('/'), 404);
+
+            return redirect()->route('dashboard');
         }
 
         $board = Board::forActiveHost($host);

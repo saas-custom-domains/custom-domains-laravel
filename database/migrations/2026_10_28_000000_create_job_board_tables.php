@@ -19,7 +19,8 @@ return new class extends Migration
 
         Schema::create('job_postings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('board_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('board_id')
+                ->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('location');
             $table->text('description');
@@ -28,7 +29,8 @@ return new class extends Migration
 
         Schema::create('job_applications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('job_posting_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('job_posting_id')
+                ->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('email');
             $table->timestamps();
@@ -36,11 +38,13 @@ return new class extends Migration
 
         Schema::create('custom_domains', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('board_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('board_id')
+                ->constrained()->cascadeOnDelete();
             // Normalized (lowercase, no port, no trailing dot). Every
             // request on a customer domain looks it up by this column.
             $table->string('host')->unique();
-            $table->string('status')->default('pending'); // pending | active
+            // pending | active
+            $table->string('status')->default('pending');
             $table->boolean('https_ready')->default(false);
             $table->string('provider_uuid')->nullable()->unique();
             $table->timestamps();
