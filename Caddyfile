@@ -1,0 +1,32 @@
+# FrankenPHP is Caddy with PHP built in, so the app container can also
+# be your own TLS proxy. Copied to /etc/frankenphp/Caddyfile.
+{
+	skip_install_trust
+	auto_https disable_redirects
+	frankenphp
+
+	# DOMAINS_PROVIDER=caddy: only issue a certificate for domains the
+	# app says are active.
+	on_demand_tls {
+		ask http://127.0.0.1:3000/caddy/ask
+	}
+}
+
+# Plain HTTP: the dashboard, health checks, webhooks, and customer
+# domains forwarded by SaaS Custom Domains (or the mock).
+http://:3000 {
+	root /app/public
+	php_server
+}
+
+# Run the proxy yourself: HTTPS for any customer domain, with a
+# certificate issued the first time someone visits it.
+https:// {
+	# "internal" because Let's Encrypt can't reach *.localhost.
+	# In production, remove "internal" to use Let's Encrypt/ZeroSSL.
+	tls internal {
+		on_demand
+	}
+	root /app/public
+	php_server
+}

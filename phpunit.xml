@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="APP_HOSTS" value="localhost,app"/>
+        <env name="APP_DOMAIN" value="hireboard.app"/>
+        <env name="DOMAINS_PROVIDER" value="saascustomdomains"/>
+        <env name="SCD_API_URL" value="https://scd.test"/>
+        <env name="SCD_API_TOKEN" value="test_api_token"/>
+        <env name="SCD_ACCOUNT_UUID" value="acc_test"/>
+        <env name="SCD_UPSTREAM_UUID" value="up_test"/>
+        <env name="PROXY_AUTH_TOKEN" value="test_proxy_token"/>
+        <env name="SCD_WEBHOOK_TOKEN" value="test_webhook_token"/>
+        <env name="TRUSTED_PROXIES" value=""/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>
