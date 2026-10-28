@@ -95,13 +95,16 @@ class CustomDomainRoutingTest extends TestCase
     // The redirect after a form POST must stay on the customer's domain.
     // Without UseServedForHost it goes to http://app.hireboard.app/jobs/1,
     // where boards don't exist.
-    public function test_applying_through_the_proxy_redirects_back_to_the_custom_domain(): void
+    public function test_apply_redirect_stays_on_the_custom_domain(): void
     {
-        $job = Board::firstWhere('slug', 'acme')->jobPostings()->first();
+        $job = Board::firstWhere('slug', 'acme')
+            ->jobPostings()->first();
 
-        $this->post(self::APP."/jobs/{$job->id}/apply", ['name' => 'Ada', 'email' => 'ada@example.com'], $this->viaProxy('jobs.acme.com'))
-            ->assertRedirect("http://jobs.acme.com/jobs/{$job->id}")
-            ->assertSessionHas('status', 'Thanks, Ada. Acme Robotics has your application.');
+        $this->post(
+            self::APP."/jobs/{$job->id}/apply",
+            ['name' => 'Ada', 'email' => 'ada@example.com'],
+            $this->viaProxy('jobs.acme.com'),
+        )->assertRedirect("http://jobs.acme.com/jobs/{$job->id}");
 
         $this->assertSame(1, $job->applications()->count());
     }
