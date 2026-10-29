@@ -12,7 +12,7 @@ What's in it:
 - Requests from the [SaaS Custom Domains](https://saascustomdomains.com) proxy are accepted only with the upstream's auth token, so nobody can claim a customer's domain by sending `X-Served-For` themselves.
 - `UseServedForHost` hands Laravel the customer's domain, so `route()`, `url()`, redirects and the CSRF-protected apply form all work on it (see [Laravel and custom domains: what breaks](#laravel-and-custom-domains-what-breaks)).
 - A dashboard to add a domain, check its DNS and remove it. Webhooks update the status.
-- Two ways to run HTTPS: SaaS Custom Domains (default), or FrankenPHP's built-in Caddy with on-demand TLS. FrankenPHP already runs the app, so there's no separate proxy to deploy.
+- HTTPS and routing for every customer domain come from SaaS Custom Domains, so the app itself only speaks plain HTTP.
 
 ## Run it in 2 minutes
 
@@ -32,21 +32,6 @@ docker compose up --build
 
 The mock is [scd-mock](https://github.com/saas-custom-domains/scd-mock): a local copy of the SaaS Custom Domains API and proxy, so you can try everything without an account.
 
-### Without Docker
-
-With PHP 8.3 or newer and Composer:
-
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate --seed
-php artisan serve
-```
-
-Set `DOMAINS_PROVIDER=caddy` in `.env` so adding a domain doesn't call the API; `*.localhost` domains count as pointed at you. Add `acme.localhost` at http://localhost:8000, click Check DNS, and open http://acme.localhost:8000.
-
 ## How it works
 
 ```
@@ -65,8 +50,7 @@ Browser ── jobs.acme.com ──▶ SaaS Custom Domains ──▶ your Larave
 | `app/Services/DomainService.php` | Add, check and remove domains with either provider |
 | `app/Services/SaasCustomDomains.php` | API client for SaaS Custom Domains (Laravel's `Http` client) |
 | `app/Http/Controllers/SaasCustomDomainsWebhookController.php` | Webhook endpoint |
-| `app/Http/Controllers/CaddyAskController.php` | Caddy's on-demand TLS check |
-| `Caddyfile` | FrankenPHP config: plain HTTP on :3000, on-demand HTTPS on :443 |
+| `Caddyfile` | Config for FrankenPHP, the app server in the Docker image (plain HTTP on :3000) |
 
 Domains live in `custom_domains` with a unique index on the normalized host (lowercase, no port, no trailing dot). `APP_DOMAIN` and `APP_HOSTS` are reserved, so nobody can connect `admin.hireboard.app` to their board.
 
@@ -126,7 +110,7 @@ Laravel 13's `PreventRequestForgery` middleware first checks the browser's `Sec-
 
 ### Health checks and webhooks
 
-Laravel registers `/up` outside the `web` group, and this app puts the webhook and Caddy's ask endpoint in `routes/hooks.php` under the `api` group (no session, no CSRF). None of them go through `ResolveBoard`, so a load balancer calling by IP, or the mock posting webhooks as `Host: app:3000`, gets through. If you moved tenant resolution into global middleware, `/up` by IP would return 404.
+Laravel registers `/up` outside the `web` group, and this app puts the webhook in `routes/hooks.php` under the `api` group (no session, no CSRF). Neither goes through `ResolveBoard`, so a load balancer calling by IP, or the mock posting webhooks as `Host: app:3000`, gets through. If you moved tenant resolution into global middleware, `/up` by IP would return 404.
 
 ## Using stancl/tenancy or Spatie's laravel-multitenancy
 
@@ -156,22 +140,6 @@ class ProxiedDomainTenantFinder extends TenantFinder
 
 Keep `UseServedForHost` in the `web` group as well, for links and redirects.
 
-## Run your own proxy instead (FrankenPHP)
-
-FrankenPHP is Caddy with PHP built in, and the app already runs on it, so the same container can terminate TLS for customer domains:
-
-```bash
-DOMAINS_PROVIDER=caddy docker compose up --build
-```
-
-Add `acme.localhost` in the dashboard and click Check DNS, then:
-
-```bash
-curl -k https://acme.localhost/
-```
-
-The `Caddyfile` asks `/caddy/ask` before issuing a certificate, and only active domains get one; any other name fails the TLS handshake. Locally it uses Caddy's internal CA, hence `-k`. In production you'd remove `internal` from the `Caddyfile`, run the container on a server with a static IP and ports 80 and 443, and then own certificate storage (the `/data` volume, shared if you run more than one instance), renewals, rate limits and monitoring yourself.
-
 ## Use it with your SaaS Custom Domains account
 
 1. [Create an API token](https://app.saascustomdomains.com/api_tokens) and an upstream pointing at your deployed app.
@@ -194,7 +162,7 @@ npx playwright install chromium
 npm run test:e2e               # end to end, through the mock proxy
 ```
 
-The end-to-end tests use `*.test` domains and send the browser's requests for them to the mock proxy, so nothing depends on DNS or on port 80. They add a domain, wait for the webhook to make it Live, apply to a job on the custom domain, and remove it. To run a second stack side by side, set `APP_PORT`, `SCD_MOCK_API_PORT`, `SCD_MOCK_PROXY_PORT` and `CADDY_PORT` for both `docker compose` and `npm run test:e2e`.
+The end-to-end tests use `*.test` domains and send the browser's requests for them to the mock proxy, so nothing depends on DNS or on port 80. They add a domain, wait for the webhook to make it Live, apply to a job on the custom domain, and remove it. To run a second stack side by side, set `APP_PORT`, `SCD_MOCK_API_PORT` and `SCD_MOCK_PROXY_PORT` for both `docker compose` and `npm run test:e2e`.
 
 CI runs both on every push and once a week, so a new Laravel release that breaks something shows up here first.
 
@@ -204,7 +172,7 @@ CI runs both on every push and once a week, so a new Laravel release that breaks
 | --- | --- |
 | Laravel | 13.39.0 |
 | PHP | 8.5.12 |
-| FrankenPHP | 1.13.4 (Caddy 2.11.7) |
+| FrankenPHP (app server in Docker) | 1.13.4 |
 | Playwright | 1.64.1 |
 
 Last checked: 2026-10-28.

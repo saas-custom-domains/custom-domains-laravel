@@ -100,27 +100,4 @@ class DashboardTest extends TestCase
 
         $this->assertModelExists($domain);
     }
-
-    public function test_the_caddy_provider_skips_the_api_and_checks_dns_itself(): void
-    {
-        config(['domains.provider' => 'caddy']);
-        Http::fake();
-
-        $this->post("/dashboard/boards/{$this->acme->id}/domains", ['host' => 'acme.localhost']);
-        $domain = CustomDomain::firstWhere('host', 'acme.localhost');
-        $this->post("/dashboard/domains/{$domain->id}/check");
-
-        $this->assertSame('Live', $domain->fresh()->statusLabel());
-        Http::assertNothingSent();
-    }
-
-    public function test_caddy_ask_allows_only_active_domains(): void
-    {
-        $this->acme->customDomains()->create(['host' => 'jobs.acme.com', 'status' => 'active']);
-        $this->acme->customDomains()->create(['host' => 'careers.acme.com']);
-
-        $this->get('http://127.0.0.1/caddy/ask?domain=jobs.acme.com')->assertOk();
-        $this->get('http://127.0.0.1/caddy/ask?domain=careers.acme.com')->assertNotFound();
-        $this->get('http://127.0.0.1/caddy/ask?domain=evil.example')->assertNotFound();
-    }
 }

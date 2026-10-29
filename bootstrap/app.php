@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         // Outside the web group, so load balancers can call it by IP.
         health: '/up',
-        // Webhooks and Caddy's ask endpoint: no session, no CSRF,
+        // Webhooks from SaaS Custom Domains: no session, no CSRF,
         // any host.
         then: fn () => Route::middleware('api')
             ->group(__DIR__.'/../routes/hooks.php'),

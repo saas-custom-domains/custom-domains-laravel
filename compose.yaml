@@ -1,14 +1,8 @@
-# docker compose up                       app + SaaS Custom Domains mock
-# DOMAINS_PROVIDER=caddy docker compose up
-#                                         app as your own TLS proxy
-#                                         (FrankenPHP is Caddy) on :443
+# docker compose up      the app + a local SaaS Custom Domains mock
 services:
   app:
     build: .
-    ports:
-      - "${APP_PORT:-3000}:3000"
-      # HTTPS with on-demand certificates, for DOMAINS_PROVIDER=caddy.
-      - "${CADDY_PORT:-443}:443"
+    ports: ["${APP_PORT:-3000}:3000"]
     environment:
       # Local only. Generate your own with `php artisan key:generate --show`.
       APP_KEY: base64:3UQ0Tkn0SZ8GL0WXbvJ6J6jmQrKYm1vvhOMy7NnXvHc=
@@ -16,7 +10,6 @@ services:
       # "app" is how the mock (webhooks) reaches this container.
       APP_HOSTS: localhost,app
       APP_DOMAIN: hireboard.app
-      DOMAINS_PROVIDER: ${DOMAINS_PROVIDER:-saascustomdomains}
       SCD_API_URL: http://scd-mock:4010
       SCD_API_TOKEN: scd_test_token
       SCD_ACCOUNT_UUID: acc_local

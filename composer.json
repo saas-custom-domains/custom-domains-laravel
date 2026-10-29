@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "saas-custom-domains/custom-domains-laravel",
     "type": "project",
-    "description": "Custom domains for a multi-tenant Laravel app, with SaaS Custom Domains or your own FrankenPHP/Caddy.",
+    "description": "Example multi-tenant Laravel 13 app with custom domains for every customer, powered by SaaS Custom Domains",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {

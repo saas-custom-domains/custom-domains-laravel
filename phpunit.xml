@@ -31,7 +31,6 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="APP_HOSTS" value="localhost,app"/>
         <env name="APP_DOMAIN" value="hireboard.app"/>
-        <env name="DOMAINS_PROVIDER" value="saascustomdomains"/>
         <env name="SCD_API_URL" value="https://scd.test"/>
         <env name="SCD_API_TOKEN" value="test_api_token"/>
         <env name="SCD_ACCOUNT_UUID" value="acc_test"/>

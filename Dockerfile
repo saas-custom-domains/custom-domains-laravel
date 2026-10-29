@@ -18,5 +18,5 @@ RUN composer dump-autoload --optimize --no-dev --no-interaction \
 
 COPY Caddyfile /etc/frankenphp/Caddyfile
 
-EXPOSE 3000 443
+EXPOSE 3000
 CMD ["sh", "-c", "php artisan migrate --force --seed && php artisan optimize && exec frankenphp run --config /etc/frankenphp/Caddyfile"]

@@ -6,13 +6,11 @@ use App\Models\Board;
 use App\Models\CustomDomain;
 use Throwable;
 
-// Adds, checks and removes custom domains with either provider.
+// Adds, checks and removes custom domains at SaaS Custom Domains and
+// keeps the local table in step.
 class DomainService
 {
-    public function __construct(
-        protected SaasCustomDomains $api,
-        protected DnsCheck $dns,
-    ) {}
+    public function __construct(protected SaasCustomDomains $api) {}
 
     public function add(
         Board $board,
@@ -22,10 +20,6 @@ class DomainService
         // The unique index on host turns a duplicate into an
         // exception here, before the API is called.
         $domain = $board->customDomains()->create(['host' => $host]);
-
-        if (! $this->managed()) {
-            return $domain;
-        }
 
         try {
             $remote = $this->api->createDomain($host, $dnsContact);
@@ -42,17 +36,13 @@ class DomainService
 
     public function check(CustomDomain $domain): bool
     {
-        $valid = $this->managed() && $domain->provider_uuid
-            ? $this->managedDnsIsValid($domain->provider_uuid)
-            : $this->dns->pointsAtUs($domain->host);
+        $result = $this->api->verifyDns($domain->provider_uuid);
+        $valid = $result['dns_status'] === 'valid';
 
         $domain->update([
             'status' => $valid
                 ? CustomDomain::ACTIVE
                 : CustomDomain::PENDING,
-            // With SaaS Custom Domains, a webhook says when HTTPS is
-            // ready. Caddy issues the certificate on the first visit.
-            ...($this->managed() ? [] : ['https_ready' => $valid]),
         ]);
 
         return $valid;
@@ -62,20 +52,10 @@ class DomainService
     {
         // Proxy first, database second: if the API call fails, the
         // row is still here and the user can retry.
-        if ($this->managed() && $domain->provider_uuid) {
+        if ($domain->provider_uuid) {
             $this->api->deleteDomain($domain->provider_uuid);
         }
 
         $domain->delete();
-    }
-
-    protected function managedDnsIsValid(string $uuid): bool
-    {
-        return $this->api->verifyDns($uuid)['dns_status'] === 'valid';
-    }
-
-    protected function managed(): bool
-    {
-        return config('domains.provider') === 'saascustomdomains';
     }
 }
