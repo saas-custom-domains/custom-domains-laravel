@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1.13.4-php8.5
+FROM dunglas/frankenphp:1.13.5-php8.5
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN install-php-extensions zip
